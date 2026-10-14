@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Jeder angemeldete Spieler darf nur seinen eigenen Spielstand lesen und schreiben.
+    match /saves/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['data', 'rev', 'progress', 'coins', 'updatedAt'])
+        && request.resource.data.data is string && request.resource.data.data.size() < 20000
+        && request.resource.data.rev is string
+        && request.resource.data.progress is int && request.resource.data.coins is int;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

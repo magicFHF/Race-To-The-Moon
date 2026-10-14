@@ -110,8 +110,12 @@ input[type=range]{width:160px;accent-color:#f5b83d}
 .start h1{margin:10px 0 8px;padding:0;font-size:clamp(30px,8.4vw,60px);line-height:1.04;font-weight:800;letter-spacing:-1.6px;white-space:nowrap;background:linear-gradient(180deg,#ffffff 25%,#9fb4ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 .start .tag{color:var(--dim);font-size:14px;margin-bottom:28px}
 .start .go{width:min(440px,100%);padding:16px;font-size:17px;border-radius:14px;box-shadow:0 10px 30px rgba(245,184,61,.25)}
-.start .row2{display:flex;gap:8px;margin:10px auto 0;width:min(440px,100%)}.start .row2 .btn{flex:1;padding:12px 8px}
+.start .row2{display:flex;flex-wrap:wrap;gap:8px;margin:10px auto 0;width:min(440px,100%)}.start .row2 .btn{flex:1;min-width:92px;padding:12px 8px}
 .start .stat{margin-top:22px;font-size:12px;color:var(--dim)}
+.fld{display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--ink);font:inherit;font-size:16px;margin:0 0 8px}
+.fld:focus{outline:none;border-color:var(--accent)}
+.acrow{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px}.acrow .btn{flex:1;min-width:140px}
+.accmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.accmp div{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
 .lnk2{background:none;border:0;color:var(--dim);font:inherit;font-size:12px;margin-top:10px;padding:6px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 body.is-title #hud,body.is-title #gear,body.is-title #touch{display:none!important}
 .start .kicker,.start .tag,.start .stat{color:#e4eafb;text-shadow:0 1px 10px rgba(0,0,0,.7)}
@@ -146,6 +150,7 @@ body.is-title #hud,body.is-title #gear,body.is-title #touch{display:none!importa
 <div id="toast"></div>
 <div id="overlay"></div>
 
+<script src="firebase-config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
@@ -256,8 +261,8 @@ function loadSave() {
     r.v = 5; if (!r.ownedCars) r.ownedCars = [0]; return r; } } catch (e) {}
   return defaultSave();
 }
-let save = loadSave(), dirty = false;
-function saveGame() { dirty = false; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+let save = loadSave(), dirty = false, cloudHook = null;
+function saveGame() { dirty = false; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} if (cloudHook) cloudHook(); }
 const markDirty = () => { dirty = true; };
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 save.settings.pixel = 1;
@@ -1148,7 +1153,7 @@ function readInput() {
 }
 addEventListener('keydown', e => {
   Snd.init();
-  if (e.code === 'Escape') { e.preventDefault(); if (mode === 'play') openSettings(); else if (mode === 'settings') closeSettings(); else if (mode === 'ws') closeWorkshop(); else if (mode === 'levels') backFromLevels(); else if (mode === 'backup') backFromBackup(); return; }
+  if (e.code === 'Escape') { e.preventDefault(); if (mode === 'play') openSettings(); else if (mode === 'settings') closeSettings(); else if (mode === 'ws') closeWorkshop(); else if (mode === 'levels') backFromLevels(); else if (mode === 'backup') backFromBackup(); else if (mode === 'account') Cloud.back(); return; }
   if (e.code === 'KeyE' && !e.repeat && !e.ctrlKey && !e.metaKey) { if (mode === 'play') { e.preventDefault(); openSettings(); return; } if (mode === 'settings') { e.preventDefault(); closeSettings(); return; } }
   if (mode === 'ws' && e.code === 'KeyW' && !e.repeat) { e.preventDefault(); closeWorkshop(); keys.KeyW = true; return; }
   if (mode === 'play') {
@@ -1480,7 +1485,7 @@ function settingsHTML() {
     <b>Leertaste</b><span>Halten = Sprung laden, loslassen = springen</span><b>Strg / C</b><span>Handbremse / Drift</span><b>Shift</b><span>Nitro (Motor Stufe 4)</span>
     <b>R</b><span>Reset zur letzten Werkstatt · repariert</span><b>F</b><span>Werkstatt öffnen (nach einem Reset)</span><b>E</b><span>Dieses Menü öffnen / schließen</span></div>
     <div class="sub" style="margin-top:10px;text-align:left">Ziel: Erreiche den Mond! Fahr durch die Werkstatt am Ende jedes Levels (Auto wird repariert) oder bleib darin stehen, um sie zu öffnen. Die Ziellinie wartet nach Level ${NLEV}. Sammle Münzen, kaufe Upgrades, meistere Kurven, Berge und die Wolken im Himmel.</div></div>
-    <div class="pfoot"><button class="btn pri" data-act="setClose">Fortsetzen</button><button class="btn" data-act="lvlsFromSet">Level wiederholen</button><button class="btn" data-act="backupFromSet">Backup</button>
+    <div class="pfoot"><button class="btn pri" data-act="setClose">Fortsetzen</button><button class="btn" data-act="lvlsFromSet">Level wiederholen</button><button class="btn" data-act="backupFromSet">Backup</button><button class="btn" data-act="acctFromSet">Konto</button>
     <button class="btn warn" data-act="${confirmNew ? 'newgame2' : 'newgame'}">${confirmNew ? 'Wirklich löschen?' : 'Neues Spiel'}</button></div></div>`;
 }
 function openSettings() { prevMode = mode; mode = 'settings'; confirmNew = false; showMenu(settingsHTML()); }
@@ -1491,8 +1496,8 @@ function showTitle() {
   showMenu(`<div class="start"><div class="kicker">Arcade Racer</div><h1>Race to the Moon</h1>
     <div class="tag">${NLEV} Level · ${NW} Welten · ein Ziel</div>
     <button class="btn pri go" data-act="play">${has ? 'Weiterspielen' : 'Spielen'}</button>
-    <div class="row2"><button class="btn" data-act="lvlsFromTitle">Level</button><button class="btn" data-act="settingsT">Einstellungen</button><button class="btn" data-act="backupFromTitle">Backup</button></div>
-    <div class="stat">Level ${unlockedLevel()} / ${NLEV} · ${save.coins} ${coinIcon}</div>${has ? '<button class="lnk2" data-act="newgame">Neues Spiel</button>' : ''}</div>`);
+    <div class="row2"><button class="btn" data-act="lvlsFromTitle">Level</button><button class="btn" data-act="settingsT">Einstellungen</button><button class="btn" data-act="backupFromTitle">Backup</button><button class="btn" data-act="acctFromTitle">Konto</button></div>
+    <div class="stat">Level ${unlockedLevel()} / ${NLEV} · ${save.coins} ${coinIcon}${Cloud.status()}</div>${has ? '<button class="lnk2" data-act="newgame">Neues Spiel</button>' : ''}</div>`);
   ov.classList.add('ttl'); document.body.classList.add('is-title');
 }
 function startPlay() { hideMenu(); mode = 'play'; respawnCheckpoint(true); car.lvl = -1; if (save.progress === 0) toast('W = Gas · A/D = Lenken<br>Leertaste halten & loslassen = Sprung', 5000); }
@@ -1576,6 +1581,145 @@ ov.addEventListener('change', e => { if (e.target.id === 'bkFile' && e.target.fi
 function applySettings() {
   pixelScale = 1; resize(); sun.castShadow = !!save.settings.shadows; $('touch').classList.toggle('on', !!save.settings.touch); $('gear').style.display = save.settings.touch ? 'none' : '';
 }
+/* ---------- Konto & Cloud-Speicherstand (Firebase Auth + Firestore) ---------- */
+const Cloud = (() => {
+  const SDK = 'https://www.gstatic.com/firebasejs/10.14.1/', META_KEY = 'ppr60_cloud_meta';
+  const cfg = window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey ? window.FIREBASE_CONFIG : null;
+  let auth = null, db = null, user = null, ready = false, busy = false, msg = '', conflict = null, back = 'title', upT = 0, lastSync = 0, loadErr = '', mail = '';
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const getMeta = () => { try { return JSON.parse(localStorage.getItem(META_KEY)) || {}; } catch (e) { return {}; } };
+  const setMeta = m => { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) {} };
+  // Kanonische Form (sortierte Schlüssel), damit gleiche Stände immer gleich verglichen werden
+  const canon = v => Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.keys(v).sort().reduce((r, k) => (r[k] = canon(v[k]), r), {}) : v;
+  const data = () => { const o = Object.assign({}, save); delete o.settings; return JSON.stringify(canon(o)); };
+  const isEmpty = () => save.progress === 0 && save.coins === 0;
+  const docRef = () => db.collection('saves').doc(user.uid);
+  const rev = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const errText = e => ({
+    'auth/invalid-email': 'Ungültige E-Mail-Adresse.', 'auth/missing-password': 'Bitte Passwort eingeben.', 'auth/weak-password': 'Passwort muss mindestens 6 Zeichen haben.',
+    'auth/email-already-in-use': 'Für diese E-Mail gibt es schon ein Konto. Bitte anmelden.', 'auth/invalid-credential': 'E-Mail oder Passwort ist falsch.',
+    'auth/wrong-password': 'E-Mail oder Passwort ist falsch.', 'auth/user-not-found': 'E-Mail oder Passwort ist falsch.', 'auth/too-many-requests': 'Zu viele Versuche. Bitte später erneut probieren.',
+    'auth/popup-closed-by-user': 'Google-Anmeldung abgebrochen.', 'auth/cancelled-popup-request': 'Google-Anmeldung abgebrochen.', 'auth/network-request-failed': 'Keine Verbindung zum Server.',
+    'auth/unauthorized-domain': 'Diese Domain ist in Firebase nicht freigegeben (Authentication → Einstellungen → Autorisierte Domains).',
+    'permission-denied': 'Zugriff verweigert – Firestore-Regeln prüfen.', 'unavailable': 'Server nicht erreichbar – später erneut versuchen.'
+  }[e && e.code] || ('Fehler: ' + ((e && (e.message || e.code)) || 'unbekannt')));
+  const loadScript = src => new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => bad(new Error('Firebase konnte nicht geladen werden')); document.head.appendChild(s); });
+
+  async function init() {
+    if (!cfg) return;
+    try {
+      for (const f of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js']) await loadScript(SDK + f);
+      firebase.initializeApp(cfg); auth = firebase.auth(); db = firebase.firestore(); auth.languageCode = 'de';
+      auth.getRedirectResult().catch(e => { msg = errText(e); refresh(); });
+      auth.onAuthStateChanged(u => { user = u; ready = false; conflict = null; if (u) resolve(); refresh(); });
+    } catch (e) { loadErr = e.message || 'Firebase konnte nicht geladen werden'; refresh(); }
+  }
+
+  // Beim Anmelden: Cloud- und lokalen Stand abgleichen
+  async function resolve() {
+    const u = user; busy = true; refresh();
+    try {
+      const snap = await docRef().get(); if (user !== u) { busy = false; return; }
+      const meta = getMeta(), local = data(), sameUser = meta.uid === u.uid, localChanged = !sameUser || meta.data !== local;
+      if (!snap.exists) await upload();
+      else {
+        const c = snap.data(), cloudChanged = !sameUser || c.rev !== meta.rev;
+        if (c.data === local) { setMeta({ uid: u.uid, rev: c.rev, data: local }); lastSync = Date.now(); }
+        else if (isEmpty() || (sameUser && !localChanged)) applyCloud(c);
+        else if (sameUser && !cloudChanged) await upload();
+        else { conflict = c; busy = false; ready = false; return showConflict(); }
+      }
+      ready = true;
+    } catch (e) { msg = errText(e); }
+    busy = false; refresh();
+  }
+
+  function applyCloud(c) {
+    try {
+      save = sanitizeSave(JSON.parse(c.data)); calcStats(); applyCosmetics(); applySettings();
+      setMeta({ uid: user.uid, rev: c.rev, data: data() }); lastSync = Date.now();
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
+      for (let L = 0; L < NLEV; L++) resetCoins(L); respawnCheckpoint(true); car.lvl = -1;
+      toast('☁ Cloud-Spielstand geladen · Level ' + unlockedLevel());
+    } catch (e) { msg = 'Cloud-Spielstand ist beschädigt: ' + (e.message || ''); }
+  }
+
+  async function upload() {
+    if (!user) return; const d = data(), r = rev();
+    await docRef().set({ data: d, rev: r, progress: save.progress, coins: save.coins, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    setMeta({ uid: user.uid, rev: r, data: d }); lastSync = Date.now();
+  }
+
+  // Wird bei jedem lokalen Speichern aufgerufen – lädt gebündelt hoch
+  function queue() {
+    if (!user || !ready || upT) return;
+    upT = setTimeout(async () => { upT = 0; if (!user || !ready || getMeta().data === data()) return;
+      try { await upload(); } catch (e) { msg = errText(e); } if (mode === 'account') render(); }, 3000);
+  }
+
+  function status() {
+    if (!cfg) return '';
+    if (!user) return ' · <span style="opacity:.8">Nicht angemeldet</span>';
+    return ' · ☁ ' + esc(user.displayName || user.email || 'Konto');
+  }
+
+  function render() {
+    mode = 'account'; let b = '';
+    const m = msg ? `<div class="msg">${esc(msg)}</div>` : '';
+    if (!cfg) b = `<div class="sub" style="text-align:left">Der Cloud-Speicher ist noch nicht eingerichtet. Trage deine Firebase-Konfiguration in <b>firebase-config.js</b> ein (Anleitung in README.md).</div>`;
+    else if (loadErr) b = `<div class="msg">${esc(loadErr)}</div><div class="sub">Prüfe deine Internetverbindung und lade die Seite neu.</div>`;
+    else if (!auth) b = '<div class="sub">Verbinde …</div>';
+    else if (!user) b = `${m}<div class="sub" style="text-align:left;margin-bottom:12px">Melde dich an, um deinen Spielstand in der Cloud zu speichern und auf allen Geräten weiterzuspielen.</div>
+      <input class="fld" id="acMail" type="email" autocomplete="email" placeholder="E-Mail" value="${esc(mail)}">
+      <input class="fld" id="acPass" type="password" autocomplete="current-password" placeholder="Passwort (mind. 6 Zeichen)">
+      <div class="acrow"><button class="btn pri" data-act="acLogin" ${busy ? 'disabled' : ''}>Anmelden</button><button class="btn" data-act="acReg" ${busy ? 'disabled' : ''}>Registrieren</button></div>
+      <div class="acrow"><button class="btn" data-act="acGoogle" ${busy ? 'disabled' : ''}>Mit Google anmelden</button></div>
+      <button class="lnk2" data-act="acReset">Passwort vergessen?</button>`;
+    else b = `${m}<div class="sub" style="text-align:left">Angemeldet als <b>${esc(user.email || user.displayName || user.uid)}</b></div>
+      <div class="sub" style="text-align:left;margin:8px 0 12px">${busy ? 'Synchronisiere …' : ready ? ('☁ Spielstand wird automatisch gespeichert' + (lastSync ? ' · zuletzt ' + new Date(lastSync).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '')) : 'Noch nicht synchronisiert'}</div>
+      <div class="acrow"><button class="btn pri" data-act="acSync" ${busy ? 'disabled' : ''}>Jetzt speichern</button><button class="btn warn" data-act="acLogout">Abmelden</button></div>`;
+    showMenu(`<div class="panel"><h1>Konto</h1><div class="pbody">${b}</div><div class="pfoot"><button class="btn" data-act="acBack">Zurück</button></div></div>`);
+  }
+
+  function showConflict() {
+    const c = conflict, lv = p => Math.min(NLEV, p + 1);
+    mode = 'account'; showMenu(`<div class="panel"><h1>Welchen Spielstand behalten?</h1><div class="pbody">
+      <div class="sub" style="text-align:left">In deinem Konto ist ein anderer Spielstand gespeichert als auf diesem Gerät.</div>
+      <div class="accmp"><div><b>☁ Cloud</b><br>Level ${lv(c.progress | 0)} · ${c.coins | 0} ${coinIcon}</div><div><b>Dieses Gerät</b><br>Level ${unlockedLevel()} · ${save.coins} ${coinIcon}</div></div>
+      <div class="sub" style="text-align:left">Der andere Stand wird überschrieben. Tipp: Vorher ein Backup herunterladen.</div></div>
+      <div class="pfoot"><button class="btn pri" data-act="acUseCloud">Cloud-Stand laden</button><button class="btn" data-act="acUseLocal">Diesen Stand hochladen</button></div></div>`);
+  }
+
+  function refresh() { if (mode === 'account' && !conflict) render(); if (mode === 'title') showTitle(); }
+  function open(from) { back = from; msg = ''; conflict ? showConflict() : render(); }
+  function goBack() {
+    if (conflict) return; msg = '';
+    if (back === 'title') { hideMenu(); showTitle(); } else if (back === 'settings') { mode = 'settings'; showMenu(settingsHTML()); } else { hideMenu(); mode = 'play'; }
+  }
+  const creds = () => { const m = $('acMail'), p = $('acPass'); if (m) mail = m.value.trim(); return [mail, p ? p.value : '']; };
+  async function run(fn) { busy = true; msg = ''; render(); try { await fn(); } catch (e) { msg = errText(e); } busy = false; if (!conflict) render(); }
+
+  ov.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; const a = b.dataset.act;
+    if (a === 'acctFromTitle') open('title');
+    else if (a === 'acctFromSet') open('settings');
+    else if (a === 'acBack') goBack();
+    else if (a === 'acLogin') { const [m, p] = creds(); run(() => auth.signInWithEmailAndPassword(m, p)); }
+    else if (a === 'acReg') { const [m, p] = creds(); run(() => auth.createUserWithEmailAndPassword(m, p)); }
+    else if (a === 'acReset') { const [m] = creds(); if (!m) { msg = 'Bitte zuerst die E-Mail-Adresse eingeben.'; return render(); }
+      run(async () => { await auth.sendPasswordResetEmail(m); msg = 'E-Mail zum Zurücksetzen wurde gesendet (auch im Spam-Ordner nachsehen).'; }); }
+    else if (a === 'acGoogle') run(async () => { const p = new firebase.auth.GoogleAuthProvider();
+      try { await auth.signInWithPopup(p); } catch (e) { if (e && /popup-blocked|operation-not-supported/.test(e.code)) await auth.signInWithRedirect(p); else throw e; } });
+    else if (a === 'acLogout') { clearTimeout(upT); upT = 0; run(async () => { if (ready && getMeta().data !== data()) await upload(); await auth.signOut(); msg = 'Abgemeldet. Der Spielstand bleibt auf diesem Gerät.'; }); }
+    else if (a === 'acSync') run(async () => { clearTimeout(upT); upT = 0; if (!ready) return resolve(); await upload(); msg = 'Gespeichert.'; });
+    else if (a === 'acUseCloud') { const c = conflict; conflict = null; applyCloud(c); ready = true; render(); }
+    else if (a === 'acUseLocal') { conflict = null; run(async () => { await upload(); ready = true; msg = 'Spielstand hochgeladen.'; }); }
+  });
+  ov.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.target.id === 'acMail' || e.target.id === 'acPass')) { const btn = ov.querySelector('[data-act="acLogin"]'); if (btn) btn.click(); } });
+
+  cloudHook = queue; init();
+  return { status, back: goBack };
+})();
 setInterval(() => { if (dirty) saveGame(); }, 4000); addEventListener('beforeunload', saveGame);
 
 /* =====================================================================
