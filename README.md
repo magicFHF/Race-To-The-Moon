@@ -6,9 +6,9 @@ Jeder Push auf `main` veröffentlicht das Spiel automatisch über GitHub Pages (
 
 ## Konto & Cloud-Spielstand (Firebase)
 
-Spieler können sich mit **E-Mail + Passwort** oder **Google** anmelden. Der Spielstand wird dann
-automatisch in der Cloud gespeichert und auf allen Geräten synchronisiert. Ohne Anmeldung bleibt
-alles wie bisher im Browser (localStorage). Einstellungen (Touch, Sound, Schatten) bleiben pro Gerät.
+Zum Spielen ist eine Anmeldung nötig – mit **E-Mail + Passwort** oder **Google**. Der Spielstand wird
+automatisch in der Cloud gespeichert und auf allen Geräten synchronisiert. Beim Abmelden wird der
+lokale Stand auf dem Gerät geleert. Einstellungen (Touch, Sound, Schatten) bleiben pro Gerät.
 
 ### Einmalige Einrichtung
 
